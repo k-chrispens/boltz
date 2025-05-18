@@ -663,7 +663,7 @@ def parse_polymer(
 
         # Load ref residue
         ref_mol = components[res_corrected]
-        ref_mol = AllChem.RemoveHs(ref_mol, sanitize=False)
+        # ref_mol = AllChem.RemoveHs(ref_mol, sanitize=False)
         ref_conformer = get_conformer(ref_mol)
 
         # Only use reference atoms set in constants
