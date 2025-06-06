@@ -1355,6 +1355,7 @@ def parse_boltz_schema(  # noqa: C901, PLR0915, PLR0912
                 res_idx,
                 res_num,
                 chain.cyclic_period,
+                chain.affinity,
             )
         )
         chain_to_idx[chain_name] = asym_id

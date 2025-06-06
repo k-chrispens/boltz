@@ -806,6 +806,7 @@ def process_inputs(
     records = [Record.load(p) for p in records_dir.glob("*.json")]
     manifest = Manifest(records)
     manifest.dump(out_dir / "processed" / "manifest.json")
+    return manifest
 
 
 @click.group()
