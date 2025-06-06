@@ -149,7 +149,7 @@ class BoltzSteeringParams:
     """Steering parameters."""
 
     fk_steering: bool = True
-    num_particles: int = 3
+    num_particles: int = 8
     fk_lambda: float = 4.0
     fk_resampling_interval: int = 3
     guidance_update: bool = True
@@ -730,6 +730,7 @@ def process_inputs(
     records = [Record.load(p) for p in records_dir.glob("*.json")]
     manifest = Manifest(records)
     manifest.dump(out_dir / "processed" / "manifest.json")
+    return manifest
 
 
 @click.group()

@@ -139,6 +139,7 @@ Chain = [
     ("res_idx", np.dtype("i4")),
     ("res_num", np.dtype("i4")),
     ("cyclic_period", np.dtype("i4")),
+    ("affinity", np.dtype("?")),
 ]
 
 Connection = [
