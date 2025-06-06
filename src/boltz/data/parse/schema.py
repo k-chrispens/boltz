@@ -818,6 +818,8 @@ def parse_polymer(
         The entity type.
     components : dict[str, Mol]
         The preprocessed PDB components dictionary.
+    cyclic : bool
+        Whether the polymer is cyclic or not.
 
     Returns
     -------
@@ -863,8 +865,10 @@ def parse_polymer(
 
         # Iterate, always in the same order
         atoms: list[ParsedAtom] = []
+        atom_idx = 0
+        idx_map = {}  # Used for bonds later
 
-        for ref_atom in ref_atoms:
+        for i, ref_atom in enumerate(ref_atoms):
             # Get atom name
             atom_name = ref_atom.GetProp("name")
             idx = ref_atom.GetIdx()
@@ -892,20 +896,55 @@ def parse_polymer(
                 )
             )
 
+            idx_map[i] = atom_idx
+            atom_idx += 1  # noqa: SIM113
+
         atom_center = const.res_to_center_atom_id[res_corrected]
         atom_disto = const.res_to_disto_atom_id[res_corrected]
+
+        bonds = []
+        unk_bond = const.bond_type_ids[const.unk_bond_type]
+        for bond in ref_mol.GetBonds():
+            idx_1 = bond.GetBeginAtomIdx()
+            idx_2 = bond.GetEndAtomIdx()
+
+            # Skip bonds with atoms ignored
+            if (idx_1 not in idx_map) or (idx_2 not in idx_map):
+                continue
+
+            idx_1 = idx_map[idx_1]
+            idx_2 = idx_map[idx_2]
+            start = min(idx_1, idx_2)
+            end = max(idx_1, idx_2)
+            bond_type = bond.GetBondType().name
+            bond_type = const.bond_type_ids.get(bond_type, unk_bond)
+            bonds.append(ParsedBond(start, end, bond_type))
+
+        rdkit_bounds_constraints = compute_geometry_constraints(ref_mol, idx_map)
+        chiral_atom_constraints = compute_chiral_atom_constraints(ref_mol, idx_map)
+        stereo_bond_constraints = compute_stereo_bond_constraints(ref_mol, idx_map)
+        planar_bond_constraints, planar_ring_5_constraints, planar_ring_6_constraints = (
+            compute_flatness_constraints(ref_mol, idx_map)
+        )
+
         parsed.append(
             ParsedResidue(
                 name=res_corrected,
                 type=const.token_ids[res_corrected],
                 atoms=atoms,
-                bonds=[],
+                bonds=bonds,
                 idx=res_idx,
                 atom_center=atom_center,
                 atom_disto=atom_disto,
                 is_standard=True,
                 is_present=True,
                 orig_idx=None,
+                rdkit_bounds_constraints=rdkit_bounds_constraints,
+                chiral_atom_constraints=chiral_atom_constraints,
+                stereo_bond_constraints=stereo_bond_constraints,
+                planar_bond_constraints=planar_bond_constraints,
+                planar_ring_5_constraints=planar_ring_5_constraints,
+                planar_ring_6_constraints=planar_ring_6_constraints,
             )
         )
 
